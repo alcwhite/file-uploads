@@ -116,7 +116,7 @@ export const Counter: React.FC = () => {
           </table>
           <button onClick={createNewEvent}>Create Container</button>
           <form id="file-upload" onSubmit={submitFileChanges}>
-            <input type="file" multiple />
+            <input type="file" multiple onChange={(e) => onSelectFiles(e.currentTarget.files)} />
             <button type="submit">Submit</button>
           </form>
       </div>
