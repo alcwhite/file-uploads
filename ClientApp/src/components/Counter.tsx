@@ -44,9 +44,8 @@ export const Counter: React.FC = () => {
   const onDeleteFiles = (deletedFile: EventFile) => {
     const formerFiles = [...supportingFiles];
     setSupportingFiles(formerFiles.filter(file => file.id !== deletedFile.id));
-    if (deletedFile.path) {
-      deleteFile(deletedFile, event.id);
-    }
+    deleteFile(deletedFile, event.id);
+    
   }
   const submitFileChanges = async () => {
     setEvent({id: event.id, files: supportingFiles});
@@ -105,9 +104,9 @@ export const Counter: React.FC = () => {
                         type="button"
                         className="button button--danger button--outline"
                         data-key={result.id}
-                        onClick={(e: { currentTarget: HTMLButtonElement; }) => excludeFile(e.currentTarget)}
+                        onClick={(e) => onDeleteFiles(supportingFiles.find(x => x.id === parseInt(e.currentTarget.getAttribute("data-key")!))!)}
                       >
-                        Remove market
+                        Delete file
                       </button>
                     </td>
                   </tr>
