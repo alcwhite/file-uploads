@@ -1,8 +1,8 @@
-export async function uploadFiles(files: FormData) {
-    const response = await fetch('/api/files', {
+export async function uploadFiles(file: Blob, eventId: number, fileId: number) {
+    const response = await fetch(`/api/files/upload?eventId=${eventId}&fileId=${fileId}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(files)
+      headers: { 'Content-Type': 'JSON' },
+      body: file
     });
     const json = await response.json();
     return json;

@@ -18,6 +18,7 @@ export const Counter: React.FC = () => {
 
   const incrementCounter = () => {
     setCurrentCount(currentCount + 1);
+    setEvent({files: [], id: currentCount + 1});
   }
 
   const [event, setEvent] = useState<{files: EventFile[], id: number}>({files: [], id: 1});
@@ -30,13 +31,14 @@ export const Counter: React.FC = () => {
   const onSelectFiles = async (e: FileList | null) => {
     const formerFiles = [...supportingFiles];
     const newFiles = e && Array.from(e); 
-    const data = new FormData();
-    newFiles && newFiles.forEach((file, i) => { 
+    // const data = new FormData();
+    const finalFiles: EventFile[] = [];
+    newFiles && newFiles.forEach(async (file, i) => { 
       const id = formerFiles.length > 0 ? formerFiles[formerFiles.length - 1].id + i + 1: i; 
-      data.append(`file-${id}`, file, file.name);
+      finalFiles.push(await uploadFiles(file, event.id, id));
+
     });
-    data.append("eventId", event.id.toString());
-    const finalFiles = data ? await uploadFiles(data) : undefined;
+    // const finalFiles = data ? await uploadFiles(data, event.id) : undefined;
     setSupportingFiles([...formerFiles, ...finalFiles]);
   }
 
