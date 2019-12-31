@@ -35,7 +35,6 @@ namespace EventsManagement.Controllers
   [HttpPost("upload")]
     public async Task<List<EventFile>> UploadFile([FromQuery] int eventId)
     {
-      // empty
       var files = HttpContext.Request.Form.Files;
       Console.WriteLine(files.Count);
       var currentFiles = new List<EventFile>();

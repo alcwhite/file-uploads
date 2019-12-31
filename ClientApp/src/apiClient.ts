@@ -11,13 +11,13 @@ export async function uploadFiles(files: FormData, eventId: number) {
 export async function deleteFile(
   file: any, 
   id: number) {
-    const response = await fetch(`/api/files/search?eventId=${id}&fileName=${file.name}`, {
-      method: 'DELETE',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ file, id })
+    await fetch(`/api/files/search?eventId=${id}&fileName=${file.name}`, {
+      method: 'DELETE'
     });
-    const json = await response.json();
-    return json;
+}
+
+export async function downloadFile(fileName: string, eventId: number) {
+  const response = await fetch(`/api/files/search?eventId=${eventId}&fileName=${fileName}`);
 }
 
 export async function createEvent(id: number) {

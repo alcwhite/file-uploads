@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { uploadFiles, deleteFile, createEvent } from '../apiClient';
+import { uploadFiles, deleteFile, createEvent, downloadFile } from '../apiClient';
 
 
 interface EventFile {
@@ -47,6 +47,7 @@ export const Counter: React.FC = () => {
     deleteFile(deletedFile, event.id);
     
   }
+
   const submitFileChanges = async () => {
     setEvent({id: event.id, files: supportingFiles});
   }
@@ -96,7 +97,7 @@ export const Counter: React.FC = () => {
               {excludeDuplicates(supportingFiles).map(result => {
                 return (
                   <tr key={result.id}>
-                    <td>{result.name}</td>
+                    <td><a onClick={() => downloadFile(result.name, event.id)}>{result.name}</a></td>
                     <td>{result.path}</td>
                     <td>{result.size}</td>
                     <td className="text-right">

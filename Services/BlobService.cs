@@ -57,8 +57,6 @@ namespace Web.Services
 
       string downloadFilePath = "";
 
-      Console.WriteLine("\nDownloading blob to\n\t{0}\n", downloadFilePath);
-
       BlobDownloadInfo download = await blobClient.DownloadAsync();
 
       using FileStream downloadFileStream = System.IO.File.OpenWrite(downloadFilePath);
@@ -68,7 +66,7 @@ namespace Web.Services
     public async Task DeleteFile(int eventId, string fileName)
     {
       var containerClient = await this.GetContainerClient(eventId);
-      var blobs = containerClient.DeleteBlobIfExistsAsync(fileName);
+      await containerClient.DeleteBlobIfExistsAsync(fileName);
     }
     public async Task DeleteContainer(int id)
     {
