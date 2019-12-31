@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json.Linq;
 using EventsManagement.Core;
 
@@ -34,18 +35,18 @@ namespace Web.Services
 
       BlobContainerClient containerClient = await blobServiceClient.CreateBlobContainerAsync(containerName);
     }
-    public async Task UploadFiles(int thisEventid, string fileName, JObject fileInfo)
+    public async Task UploadFiles(int thisEventid, string fileName, IFormFile fileInfo)
     {
       var containerClient = await this.GetContainerClient(thisEventid);
       BlobClient blobClient = containerClient.GetBlobClient(fileName);
 
       Console.WriteLine("Uploading to Blob storage as blob:\n\t {0}\n", blobClient.Uri);
 
-      using (StringReader reader = new StringReader(fileInfo.ToString()))
-      {
-        string readText = await reader.ReadToEndAsync();
-        await blobClient.UploadAsync(readText);
-      };
+      var readStream = fileInfo.OpenReadStream(); 
+
+      await blobClient.UploadAsync(readStream);
+
+      readStream.Close();
 
       
     }

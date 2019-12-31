@@ -6,6 +6,7 @@ using EventsManagement.Core;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using System.Linq;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Primitives;
 
 namespace EventsManagement.Controllers
@@ -13,7 +14,6 @@ namespace EventsManagement.Controllers
     [ApiController, Route("api/events")]
     public class EventsController : Controller
     {
-        string accountName = "quickstarttest";
         private readonly BlobService blob;
         public EventsController(BlobService blob) => this.blob = blob;
         [HttpPost("{id}")]
@@ -35,24 +35,20 @@ namespace EventsManagement.Controllers
   [HttpPost("upload")]
     public async Task<List<EventFile>> UploadFile([FromQuery] int eventId)
     {
-      var files = Request.Form;
+      // empty
+      var files = HttpContext.Request.Form.Files;
       Console.WriteLine(files.Count);
-      var fileIds = files.Keys.ToList();
-      Console.WriteLine(fileIds.Count);
       var currentFiles = new List<EventFile>();
-      fileIds.ForEach(async fileId =>
-      {
-        var id = int.Parse(fileId);
-        files.TryGetValue(fileId, out StringValues file);          
+      foreach (IFormFile file in files)
+      {        
         EventFile thisFile = new EventFile();
-        var fileObject = JObject.Parse(file);
-        thisFile.Name = fileObject["name"].ToString();
-        thisFile.Size = int.Parse(fileObject["size"].ToString());
-        thisFile.Id = id;
-        await blob.UploadFiles(eventId, fileObject["name"].ToString(), fileObject);
+        thisFile.Name = file.FileName;
+        thisFile.Size = 100;
+        thisFile.Id = 0;
+        await blob.UploadFiles(eventId, thisFile.Name, file);
         thisFile.Path = $"https://{accountName}.blob.core.windows.net/event{eventId}/{thisFile.Name}";
         currentFiles.Add(thisFile);
-      });
+      }
       return currentFiles;
     }
     [HttpDelete("search")]

@@ -1,7 +1,7 @@
 export async function uploadFiles(files: FormData, eventId: number) {
+  files.forEach(x => console.log(x));
     const response = await fetch(`/api/files/upload?eventId=${eventId}`, {
       method: 'POST',
-      
       body: files
     });
     const json = await response.json();
