@@ -31,14 +31,13 @@ export const Counter: React.FC = () => {
   const onSelectFiles = async (e: FileList | null) => {
     const formerFiles = [...supportingFiles];
     const newFiles = e && Array.from(e); 
-    // const data = new FormData();
-    const finalFiles: EventFile[] = [];
+    const data = new FormData();
     newFiles && newFiles.forEach(async (file, i) => { 
       const id = formerFiles.length > 0 ? formerFiles[formerFiles.length - 1].id + i + 1: i; 
-      finalFiles.push(await uploadFiles(file, event.id, id));
+      data.append(`${id}`, file);
 
     });
-    // const finalFiles = data ? await uploadFiles(data, event.id) : undefined;
+    const finalFiles = data.entries ? await uploadFiles(data, event.id) : undefined;
     setSupportingFiles([...formerFiles, ...finalFiles]);
   }
 

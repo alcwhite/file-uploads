@@ -2,7 +2,7 @@ using System;
 
 namespace EventsManagement.Core
 {
-  public class File
+  public class EventFile
   {
     public int Id { get; set; }
     public string Name { get; set; }
