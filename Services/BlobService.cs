@@ -1,16 +1,9 @@
 using System;
-using System.IO;
-using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
-using Newtonsoft.Json.Linq;
-using EventsManagement.Core;
 
-using Azure;
-using Azure.Storage;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
-using Microsoft.Azure.Storage.Blob;
 
 namespace Web.Services
 {
@@ -18,6 +11,7 @@ namespace Web.Services
   {
     
     static string connectionString = "DefaultEndpointsProtocol=https;AccountName=quickstarttest;AccountKey=PrBYaCosCT+xVfWV3ngeZeQTqMhKzIJxxi82eeRHLJ+eV9+Hh8CrKVRN/lfzPeD7otSBahh4z0dVSeTfQwLD/g==;EndpointSuffix=core.windows.net";
+    static string accountName = "quickstarttest";
     public BlobServiceClient blobServiceClient = new BlobServiceClient(connectionString);
   
 
@@ -50,18 +44,12 @@ namespace Web.Services
 
       
     }
-    public async Task DownloadFile(int thisEventId, string fileName)
+    public async Task<BlobDownloadInfo> DownloadFile(int thisEventId, string fileName)
     {
       var containerClient = await this.GetContainerClient(thisEventId);
       BlobClient blobClient = containerClient.GetBlobClient(fileName);
-
-      string downloadFilePath = "";
-
       BlobDownloadInfo download = await blobClient.DownloadAsync();
-
-      using FileStream downloadFileStream = System.IO.File.OpenWrite(downloadFilePath);
-      await download.Content.CopyToAsync(downloadFileStream);
-      downloadFileStream.Close();
+      return download;
     }
     public async Task DeleteFile(int eventId, string fileName)
     {

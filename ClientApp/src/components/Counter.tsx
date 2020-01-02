@@ -14,15 +14,16 @@ interface EventFile {
 
 export const Counter: React.FC = () => {
 
+  // don't need any of this
   const [currentCount, setCurrentCount] = useState(0);
-
   const incrementCounter = () => {
     setCurrentCount(currentCount + 1);
     setEvent({files: [], id: currentCount + 1});
   }
 
+  // event state not necessary -- just needs access to current event if exists
   const [event, setEvent] = useState<{files: EventFile[], id: number}>({files: [], id: 1});
-  const accountName = "quickstarttest"
+  const accountName = "quickstarttest";
   const [supportingFiles, setSupportingFiles] = useState<EventFile[]>([...event.files]);
   const createNewEvent = async () => {
     const newEvent = await createEvent(currentCount);
@@ -31,36 +32,31 @@ export const Counter: React.FC = () => {
   const onSelectFiles = async (e: FileList | null) => {
     const formerFiles = [...supportingFiles];
     const newFiles = e && Array.from(e); 
-    const data = new FormData();
-    newFiles && newFiles.forEach(async (file, i) => { 
-      const id = formerFiles.length > 0 ? formerFiles[formerFiles.length - 1].id + i + 1: i; 
-      data.append(`${id}`, file);
-
-    });
-    const finalFiles = data.entries ? await uploadFiles(data, event.id) : undefined;
+    // const data = new FormData();
+    // newFiles && newFiles.forEach(async (file, i) => { 
+    //   const id = formerFiles.length > 0 ? formerFiles[formerFiles.length - 1].id + i + 1: i; 
+    //   data.append(`${id}`, file);
+    // });
+    const finalFiles = newFiles && await uploadFiles(newFiles, event);
     setSupportingFiles([...formerFiles, ...finalFiles]);
   }
 
   const onDeleteFiles = (deletedFile: EventFile) => {
     const formerFiles = [...supportingFiles];
-    setSupportingFiles(formerFiles.filter(file => file.id !== deletedFile.id));
-    deleteFile(deletedFile, event.id);
-    
+    deleteFile(deletedFile, event.id).then(() => setSupportingFiles(formerFiles.filter(file => file.id !== deletedFile.id)));
   }
+
+  // let href = '';
+  // const onDownloadFile = async (fileName: string, eventId: number) => {
+  //   href = await downloadFile(fileName, eventId);
+  // }
 
   const submitFileChanges = async () => {
     setEvent({id: event.id, files: supportingFiles});
   }
 
-  const excludeDuplicates = (mayHaveDuplicates: any[]) => {
-    const response: any[] = [];
-    mayHaveDuplicates.forEach((i: { id: any; }) => {
-      const isFound = response.some(j => {
-        return i.id === j.id;
-      });
-      if (!isFound) response.push(i);
-    });
-    return response;
+  const excludeDuplicates = <T extends { id: any }>(mayHaveDuplicates: T[]) => {
+    return mayHaveDuplicates;
   };
 
   const excludeFile = (e: HTMLButtonElement) => {
@@ -97,7 +93,9 @@ export const Counter: React.FC = () => {
               {excludeDuplicates(supportingFiles).map(result => {
                 return (
                   <tr key={result.id}>
-                    <td><a onClick={() => downloadFile(result.name, event.id)}>{result.name}</a></td>
+                    <td><a 
+                      href={downloadFile(result.name, event.id)}
+                      download={result.name} >{result.name}</a></td>
                     <td>{result.path}</td>
                     <td>{result.size}</td>
                     <td className="text-right">

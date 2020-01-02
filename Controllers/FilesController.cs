@@ -1,13 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Web.Services;
-using System;
 using System.Collections.Generic;
 using EventsManagement.Core;
 using System.Threading.Tasks;
-using Newtonsoft.Json.Linq;
 using System.Linq;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Primitives;
 
 namespace EventsManagement.Controllers
 {
@@ -36,24 +33,34 @@ namespace EventsManagement.Controllers
     public async Task<List<EventFile>> UploadFile([FromQuery] int eventId)
     {
       var files = HttpContext.Request.Form.Files;
-      Console.WriteLine(files.Count);
+      var ids = HttpContext.Request.Form.Keys;
+      var allFiles = ids.Zip(files, (k, v) => new { k, v }).ToDictionary(x => x.k, x => x.v);
       var currentFiles = new List<EventFile>();
-      foreach (IFormFile file in files)
+      foreach (KeyValuePair<string, IFormFile> file in allFiles)
       {        
         EventFile thisFile = new EventFile();
-        thisFile.Name = file.FileName;
-        thisFile.Size = 100;
-        thisFile.Id = 0;
-        await blob.UploadFiles(eventId, thisFile.Name, file);
+        thisFile.Name = file.Value.FileName;
+        thisFile.Size = file.Value.Length;
+        thisFile.Id = int.Parse(file.Key);
+        await blob.UploadFiles(eventId, thisFile.Name, file.Value);
         thisFile.Path = $"https://{accountName}.blob.core.windows.net/event{eventId}/{thisFile.Name}";
         currentFiles.Add(thisFile);
       }
       return currentFiles;
     }
-    [HttpDelete("search")]
-    public async void DeleteFile([FromQuery] int eventId, string name)
+    [HttpDelete("delete")]
+    public async void DeleteFile([FromQuery] int eventId, [FromQuery] string fileName)
     {
-      await blob.DeleteFile(eventId, name);
+      await blob.DeleteFile(eventId, fileName);
+    }
+    [HttpGet("download")]
+    public async Task<FileStreamResult> DownloadFile([FromQuery] string fileName, [FromQuery] int eventId)
+    {
+      var thisFile = await blob.DownloadFile(eventId, fileName);
+
+      Response.Headers["Content-Disposition"] = $"inline; filename={fileName}";
+      
+      return File(thisFile.Content, thisFile.ContentType);
     }
 
   }
