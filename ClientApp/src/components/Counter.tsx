@@ -1,72 +1,74 @@
 import React, { useState } from 'react';
-import { uploadFiles, deleteFile, createEvent, downloadFile } from '../apiClient';
+import { uploadFiles, deleteFile, createEvent, downloadFile, getBlobs } from '../apiClient';
 
-
+// name needs to be unique within a given event as it is right now
 interface EventFile {
-    id: number;
     name: string;
-    path: ArrayBuffer | string | null;
     size: number;
     type: string;
-  
 }
 
 
 export const Counter: React.FC = () => {
 
-  // don't need any of this
+  // don't need any of this -- anywhere currentCount is used should be event.id
   const [currentCount, setCurrentCount] = useState(0);
-  const incrementCounter = () => {
-    setCurrentCount(currentCount + 1);
-    setEvent({files: [], id: currentCount + 1});
+  const incrementCount = async () => {
+    const newCount = currentCount + 1;
+    const fileList = await getBlobs(newCount);
+    setCurrentCount(newCount);
+    setSupportingFiles(fileList);
+  }
+  const decrementCount = async () => {
+    const newCount = currentCount === 0 ? 0 : currentCount - 1;
+    const fileList = await getBlobs(newCount);
+    setCurrentCount(newCount);
+    setSupportingFiles(fileList);
   }
 
-  // event state not necessary -- just needs access to current event if exists
-  const [event, setEvent] = useState<{files: EventFile[], id: number}>({files: [], id: 1});
-  const accountName = "quickstarttest";
-  const [supportingFiles, setSupportingFiles] = useState<EventFile[]>([...event.files]);
+
+
+  // this is for what happens within the form
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const onExcludeFiles = (deletedFile: File) => {
+    const formerFiles = [...selectedFiles];
+    setSelectedFiles(formerFiles.filter(file => file.name !== deletedFile.name))
+  }
+  const onSelectFiles = (e: FileList | null) => {
+    const formerFiles = [...selectedFiles];
+    const newFiles = e && Array.from(e);
+    newFiles && setSelectedFiles([...formerFiles, ...newFiles]);
+  }
+
+
+  // this may be unnecessary as well, depending on implementation -- might just be event.files, and might start out as event.files
+  const [supportingFiles, setSupportingFiles] = useState<EventFile[]>([]);
+
+
+  // this simulates creating a new event in event app -- event.id does not exist yet (until createEvent)
   const createNewEvent = async () => {
     const newEvent = await createEvent(currentCount);
-    setEvent(newEvent);
+    // now event.id exists -- and so does container
+    await onUploadFiles(selectedFiles, newEvent);
   }
-  const onSelectFiles = async (e: FileList | null) => {
+  // this simulates editing an event -- event.id exists and so does container
+  const editEvent = async () => {
+    // second parameter is event
+    await onUploadFiles(selectedFiles, {id: currentCount, files: []});
+  }
+
+  const onUploadFiles = async (newFiles: File[], newEvent: {id: number, files: EventFile[]}) => {
     const formerFiles = [...supportingFiles];
-    const newFiles = e && Array.from(e); 
-    // const data = new FormData();
-    // newFiles && newFiles.forEach(async (file, i) => { 
-    //   const id = formerFiles.length > 0 ? formerFiles[formerFiles.length - 1].id + i + 1: i; 
-    //   data.append(`${id}`, file);
-    // });
-    const finalFiles = newFiles && await uploadFiles(newFiles, event);
+    // second parameter is event 
+    const finalFiles = await uploadFiles(newFiles, newEvent);
+    // this might be getEvent? or something?
     setSupportingFiles([...formerFiles, ...finalFiles]);
   }
-
   const onDeleteFiles = (deletedFile: EventFile) => {
     const formerFiles = [...supportingFiles];
-    deleteFile(deletedFile, event.id).then(() => setSupportingFiles(formerFiles.filter(file => file.id !== deletedFile.id)));
+    // same as above wrt setSupportingFiles
+    deleteFile(deletedFile, currentCount).then(() => setSupportingFiles(formerFiles.filter(file => file.name !== deletedFile.name)));
   }
-
-  // let href = '';
-  // const onDownloadFile = async (fileName: string, eventId: number) => {
-  //   href = await downloadFile(fileName, eventId);
-  // }
-
-  const submitFileChanges = async () => {
-    setEvent({id: event.id, files: supportingFiles});
-  }
-
-  const excludeDuplicates = <T extends { id: any }>(mayHaveDuplicates: T[]) => {
-    return mayHaveDuplicates;
-  };
-
-  const excludeFile = (e: HTMLButtonElement) => {
-    const buttonId = parseInt(e.getAttribute('data-key')!);
-    const file = supportingFiles.find((i: { id: number; }) => i.id === buttonId)
-    if (file) {
-      deleteFile(file, event.id);
-      return supportingFiles.filter((i: { id: number; }) => i.id !== buttonId);
-    } 
-  };
 
 
     return (
@@ -75,35 +77,33 @@ export const Counter: React.FC = () => {
 
         <p>This is a simple example of a React component.</p>
 
-        <p aria-live="polite">Current count: <strong>{currentCount}</strong></p>
+        <p aria-live="polite">Event Id: <strong>{currentCount}</strong></p>
 
-        <button className="btn btn-primary" onClick={incrementCounter}>Increment</button>
+        <button className="btn btn-primary" onClick={incrementCount}>Increment</button>
+        <button className="btn btn-primary" onClick={decrementCount}>Decrement</button>
       
         <table>
             <caption>Supporting Files</caption>
             <thead>
               <tr>
                 <th>Name</th>
-                <th>Path</th>
                 <th>Size</th>
                 <th>&nbsp;</th>
               </tr>
             </thead>
             <tbody>
-              {excludeDuplicates(supportingFiles).map(result => {
+              {supportingFiles.map(result => {
                 return (
-                  <tr key={result.id}>
+                  <tr key={result.name}>
                     <td><a 
-                      href={downloadFile(result.name, event.id)}
+                      href={downloadFile(result.name, currentCount)}
                       download={result.name} >{result.name}</a></td>
-                    <td>{result.path}</td>
                     <td>{result.size}</td>
                     <td className="text-right">
                       <button
                         type="button"
                         className="button button--danger button--outline"
-                        data-key={result.id}
-                        onClick={(e) => onDeleteFiles(supportingFiles.find(x => x.id === parseInt(e.currentTarget.getAttribute("data-key")!))!)}
+                        onClick={(e) => onDeleteFiles(supportingFiles.find(x => x.name === result.name)!)}
                       >
                         Delete file
                       </button>
@@ -113,11 +113,57 @@ export const Counter: React.FC = () => {
               })}
             </tbody>
           </table>
-          <button onClick={createNewEvent}>Create Container</button>
-          <form id="file-upload" onSubmit={submitFileChanges}>
+
+        {/* These forms simulate Create and Edit Event forms -- I used onClick instead of type=submit and onSubmit so the page wouldn't refresh */}
+          <form id="file-upload">
+            <h1>Create Event</h1>
+            <FileList selectedFiles={selectedFiles} onExcludeFiles={onExcludeFiles} />
             <input type="file" multiple onChange={(e) => onSelectFiles(e.currentTarget.files)} />
-            <button type="submit">Submit</button>
+            <button onClick={createNewEvent}>Submit Create Event Form</button>
+          </form>
+
+          <form id="file-upload">
+            <h1>Edit Event</h1>
+            <FileList selectedFiles={selectedFiles} onExcludeFiles={onExcludeFiles} />
+            <input type="file" multiple onChange={(e) => onSelectFiles(e.currentTarget.files)} />
+            <button onClick={editEvent}>Submit Edit Event Form</button>
           </form>
       </div>
     );
+}
+
+
+const FileList: React.FC<{selectedFiles: File[]; onExcludeFiles: (f: File) => void;}> = ({selectedFiles, onExcludeFiles}) => {
+  
+  return (
+    <table>
+            <caption>Selected Files</caption>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Size</th>
+                <th>&nbsp;</th>
+              </tr>
+            </thead>
+            <tbody>
+              {selectedFiles.map(result => {
+                return (
+                  <tr key={result.name}>
+                    <td>{result.name}</td>
+                    <td>{result.size}</td>
+                    <td className="text-right">
+                      <button
+                        type="button"
+                        className="button button--danger button--outline"
+                        onClick={() => onExcludeFiles(selectedFiles.find(x => x.name === result.name)!)}
+                      >
+                        Remove file
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+  )
 }

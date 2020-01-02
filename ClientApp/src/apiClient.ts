@@ -1,9 +1,9 @@
-// event should be of type EMEvent (or undefined, I guess?)
+// event should be of type EMEvent (or undefined, I guess? for creating an event?)
 export async function uploadFiles(files: File[], event: any) {
   const data = new FormData();
   files.forEach(file => {
     const id = event.files.length > 0 ? event.files[event.files.length - 1].id + files.indexOf(file) + 1: files.indexOf(file); 
-    data.append('id', file)
+    data.append('file', file);
   });
   const response = await fetch(`/api/files/upload?eventId=${event.id}`, {
     method: 'POST',
@@ -26,11 +26,19 @@ export function downloadFile(fileName: string, eventId: number) {
   return `/api/files/download?eventId=${eventId}&fileName=${fileName}`
 }
 
+// ignore this
 export async function createEvent(id: number) {
   const response = await fetch(`/api/events/${id}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' }
   });
-  const json = await response.json();
-  return {id: id, files: []};
+  const stringId = await response.text();
+  return {id: parseInt(stringId), files: []};
+}
+
+// also ignore this
+export async function getBlobs(id: number) {
+  const response = await fetch(`/api/files/search?eventId=${id}`);
+  const json = response.json();
+  return json;
 }

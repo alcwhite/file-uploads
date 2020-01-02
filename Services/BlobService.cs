@@ -1,7 +1,9 @@
-using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using EventsManagement.Core;
+using System.Collections.Generic;
 
+using Azure;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 
@@ -13,8 +15,6 @@ namespace Web.Services
     static string connectionString = "DefaultEndpointsProtocol=https;AccountName=quickstarttest;AccountKey=PrBYaCosCT+xVfWV3ngeZeQTqMhKzIJxxi82eeRHLJ+eV9+Hh8CrKVRN/lfzPeD7otSBahh4z0dVSeTfQwLD/g==;EndpointSuffix=core.windows.net";
     static string accountName = "quickstarttest";
     public BlobServiceClient blobServiceClient = new BlobServiceClient(connectionString);
-  
-
     
     public async Task<BlobContainerClient> GetContainerClient(int id)
     {
@@ -34,15 +34,9 @@ namespace Web.Services
       var containerClient = await this.GetContainerClient(thisEventid);
       BlobClient blobClient = containerClient.GetBlobClient(fileName);
 
-      Console.WriteLine("Uploading to Blob storage as blob:\n\t {0}\n", blobClient.Uri);
-
       var readStream = fileInfo.OpenReadStream(); 
-
       await blobClient.UploadAsync(readStream);
-
       readStream.Close();
-
-      
     }
     public async Task<BlobDownloadInfo> DownloadFile(int thisEventId, string fileName)
     {
@@ -60,6 +54,29 @@ namespace Web.Services
     {
       var containerClient = await this.GetContainerClient(id);
       await containerClient.DeleteAsync();
+    }
+
+    // ignore this; it's just for the test app
+    public async Task<List<BlobItem>> GetBlobList(int id)
+    {
+      var allBlobContainers = this.blobServiceClient.GetBlobContainersAsync();
+      var allContainers = new List<string>();
+      await foreach (var container in allBlobContainers)
+      {
+        allContainers.Add(container.Name);
+      }
+      var containerClientExists = allContainers.Contains($"event{id}");
+      var blobList = new List<BlobItem>();
+      if (containerClientExists)
+      {
+        var containerClient = await this.GetContainerClient(id);
+        var blobs = containerClient.GetBlobsAsync();
+        await foreach (var blob in blobs)
+        {
+          blobList.Add(blob);
+        }
+      }
+      return blobList;
     }
 
   }

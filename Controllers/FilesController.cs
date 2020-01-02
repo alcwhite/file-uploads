@@ -5,6 +5,7 @@ using EventsManagement.Core;
 using System.Threading.Tasks;
 using System.Linq;
 using Microsoft.AspNetCore.Http;
+using System;
 
 namespace EventsManagement.Controllers
 {
@@ -16,6 +17,7 @@ namespace EventsManagement.Controllers
         [HttpPost("{id}")]
             public int AddEvent(int id)
             {
+              // basically create container when create event
                 blob.CreateContainer(id);
                 return id;
             }
@@ -33,17 +35,13 @@ namespace EventsManagement.Controllers
     public async Task<List<EventFile>> UploadFile([FromQuery] int eventId)
     {
       var files = HttpContext.Request.Form.Files;
-      var ids = HttpContext.Request.Form.Keys;
-      var allFiles = ids.Zip(files, (k, v) => new { k, v }).ToDictionary(x => x.k, x => x.v);
       var currentFiles = new List<EventFile>();
-      foreach (KeyValuePair<string, IFormFile> file in allFiles)
+      foreach (IFormFile file in files)
       {        
         EventFile thisFile = new EventFile();
-        thisFile.Name = file.Value.FileName;
-        thisFile.Size = file.Value.Length;
-        thisFile.Id = int.Parse(file.Key);
-        await blob.UploadFiles(eventId, thisFile.Name, file.Value);
-        thisFile.Path = $"https://{accountName}.blob.core.windows.net/event{eventId}/{thisFile.Name}";
+        thisFile.Name = file.FileName;
+        thisFile.Size = file.Length;
+        await blob.UploadFiles(eventId, thisFile.Name, file);
         currentFiles.Add(thisFile);
       }
       return currentFiles;
@@ -61,6 +59,24 @@ namespace EventsManagement.Controllers
       Response.Headers["Content-Disposition"] = $"inline; filename={fileName}";
       
       return File(thisFile.Content, thisFile.ContentType);
+    }
+
+
+    // ignore this; it's just for the test app
+    [HttpGet("search")]
+    public async Task<List<EventFile>> FindBlobs([FromQuery] int eventId)
+    {
+      var fileList = new List<EventFile>();
+      var blobList = await blob.GetBlobList(eventId);
+      foreach (var blob in blobList)
+      {
+        EventFile thisBlob = new EventFile();
+        thisBlob.Name = blob.Name;
+        thisBlob.Size = (long)blob.Properties.ContentLength;
+        thisBlob.Type = blob.Properties.ContentType;
+        fileList.Add(thisBlob);
+      }
+      return fileList;
     }
 
   }
