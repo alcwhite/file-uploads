@@ -114,19 +114,20 @@ export const Counter: React.FC = () => {
             </tbody>
           </table>
 
-        {/* These forms simulate Create and Edit Event forms -- I used onClick instead of type=submit and onSubmit so the page wouldn't refresh */}
-          <form id="file-upload">
+
+          {/* These forms simulate Create Event and Edit Event forms */}
+          <form id="file-upload" onSubmit={createNewEvent}>
             <h1>Create Event</h1>
             <FileList selectedFiles={selectedFiles} onExcludeFiles={onExcludeFiles} />
             <input type="file" multiple onChange={(e) => onSelectFiles(e.currentTarget.files)} />
-            <button onClick={createNewEvent}>Submit Create Event Form</button>
+            <button type="submit">Submit Create Event Form</button>
           </form>
 
-          <form id="file-upload">
+          <form id="file-upload-edit" onSubmit={editEvent}>
             <h1>Edit Event</h1>
             <FileList selectedFiles={selectedFiles} onExcludeFiles={onExcludeFiles} />
             <input type="file" multiple onChange={(e) => onSelectFiles(e.currentTarget.files)} />
-            <button onClick={editEvent}>Submit Edit Event Form</button>
+            <button type="submit">Submit Edit Event Form</button>
           </form>
       </div>
     );
