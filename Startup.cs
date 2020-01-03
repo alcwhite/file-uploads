@@ -29,9 +29,10 @@ namespace BlobUploads
             {
                 configuration.RootPath = "ClientApp/build";
             });
+            
             var connectionString = Configuration.GetConnectionString("BlobStorage");
-      var blobServiceClient = new BlobServiceClient(connectionString);
-      services.Add(new ServiceDescriptor(typeof(BlobService), new BlobService(blobServiceClient)));
+            var blobServiceClient = new BlobServiceClient(connectionString);
+            services.Add(new ServiceDescriptor(typeof(BlobService), new BlobService(blobServiceClient)));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

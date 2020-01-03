@@ -25,7 +25,6 @@ namespace EventsManagement.Controllers
   [ApiController, Route("api/files")]
   public class FilesController : Controller
   {
-    string accountName = "quickstarttest";
     private readonly BlobService blob;
     public FilesController(BlobService blob) => this.blob = blob;
 
