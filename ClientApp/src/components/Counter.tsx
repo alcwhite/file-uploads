@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { uploadFiles, deleteFile, createEvent, downloadFile, getBlobs } from '../apiClient';
 
-// name needs to be unique within a given event as it is right now
+// name needs to be unique within a given event as it is right now -- azure uploads, downloads, and deletes based on name as well
 interface EventFile {
     name: string;
     size: number;
