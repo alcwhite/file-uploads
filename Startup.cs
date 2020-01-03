@@ -1,11 +1,11 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Web.Services;
+using Azure.Storage.Blobs;
 
 namespace BlobUploads
 {
@@ -29,7 +29,9 @@ namespace BlobUploads
             {
                 configuration.RootPath = "ClientApp/build";
             });
-            services.AddScoped<BlobService>();
+            var connectionString = Configuration.GetConnectionString("BlobStorage");
+      var blobServiceClient = new BlobServiceClient(connectionString);
+      services.Add(new ServiceDescriptor(typeof(BlobService), new BlobService(blobServiceClient)));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

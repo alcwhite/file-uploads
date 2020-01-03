@@ -12,9 +12,12 @@ namespace Web.Services
   public class BlobService
   {
     
-    static string connectionString = "DefaultEndpointsProtocol=https;AccountName=quickstarttest;AccountKey=PrBYaCosCT+xVfWV3ngeZeQTqMhKzIJxxi82eeRHLJ+eV9+Hh8CrKVRN/lfzPeD7otSBahh4z0dVSeTfQwLD/g==;EndpointSuffix=core.windows.net";
-    static string accountName = "quickstarttest";
-    public BlobServiceClient blobServiceClient = new BlobServiceClient(connectionString);
+    private readonly BlobServiceClient blobServiceClient;
+
+    public BlobService(BlobServiceClient blobServiceClient)
+    {
+      this.blobServiceClient = blobServiceClient;
+    }
     
     public async Task<BlobContainerClient> GetContainerClient(int id)
     {
