@@ -1,9 +1,7 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
-using EventsManagement.Core;
 using System.Collections.Generic;
 
-using Azure;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 

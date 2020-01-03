@@ -3,9 +3,7 @@ using Web.Services;
 using System.Collections.Generic;
 using EventsManagement.Core;
 using System.Threading.Tasks;
-using System.Linq;
 using Microsoft.AspNetCore.Http;
-using System;
 
 namespace EventsManagement.Controllers
 {
