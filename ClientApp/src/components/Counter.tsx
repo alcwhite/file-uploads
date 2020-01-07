@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
-import { uploadFiles, deleteFile, createEvent, downloadFile, getBlobs } from '../apiClient';
+import React, { useState, FormEvent } from 'react';
+import { uploadFiles, deleteFile, downloadFile, getBlobs } from '../apiClient';
 
 // name needs to be unique within a given event as it is right now -- azure uploads, downloads, and deletes based on name as well
 interface EventFile {
     name: string;
     size: number;
     type: string;
+    id: number;
 }
 
 
@@ -46,15 +47,16 @@ export const Counter: React.FC = () => {
 
 
   // this simulates creating a new event in event app -- event.id does not exist yet (until createEvent)
-  const createNewEvent = async () => {
-    const newEvent = await createEvent(currentCount);
+  const createNewEvent = async (e: FormEvent) => {
+    e.preventDefault();
     // now event.id exists -- and so does container
-    await onUploadFiles(selectedFiles, newEvent);
+    await onUploadFiles(selectedFiles, {files: [], id: currentCount});
   }
   // this simulates editing an event -- event.id exists and so does container
-  const editEvent = async () => {
+  const editEvent = async (e: FormEvent) => {
+    e.preventDefault();
     // second parameter is event
-    await onUploadFiles(selectedFiles, {id: currentCount, files: []});
+    await onUploadFiles(selectedFiles, {id: currentCount, files: supportingFiles});
   }
 
   const onUploadFiles = async (newFiles: File[], newEvent: {id: number, files: EventFile[]}) => {

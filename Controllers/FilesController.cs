@@ -4,22 +4,10 @@ using System.Collections.Generic;
 using EventsManagement.Core;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using System;
 
 namespace EventsManagement.Controllers
 {
-    [ApiController, Route("api/events")]
-    public class EventsController : Controller
-    {
-        private readonly BlobService blob;
-        public EventsController(BlobService blob) => this.blob = blob;
-        [HttpPost("{id}")]
-            public int AddEvent(int id)
-            {
-              // basically create container when create event
-                blob.CreateContainer(id);
-                return id;
-            }
-    }
     
 
   [ApiController, Route("api/files")]
@@ -36,9 +24,12 @@ namespace EventsManagement.Controllers
       foreach (IFormFile file in files)
       {        
         EventFile thisFile = new EventFile();
-        thisFile.Name = file.FileName;
+        thisFile.Type = file.ContentType;
         thisFile.Size = file.Length;
-        await blob.UploadFiles(eventId, thisFile.Name, file);
+        Console.WriteLine(file.Name);
+        thisFile.Id = int.Parse(file.Name);
+        var newName = await blob.UploadFile(eventId, file.FileName, file);
+        thisFile.Name = newName;
         currentFiles.Add(thisFile);
       }
       return currentFiles;

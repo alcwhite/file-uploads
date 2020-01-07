@@ -4,6 +4,7 @@ using System.Collections.Generic;
 
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
+using Azure.Storage.Blobs.Specialized;
 
 namespace Web.Services
 {
@@ -23,21 +24,31 @@ namespace Web.Services
       BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient(containerName);
       return containerClient;
     }
-    
-    public async Task CreateContainer(int id)
-    {
-      string containerName = "event" + id.ToString();
 
-      BlobContainerClient containerClient = await blobServiceClient.CreateBlobContainerAsync(containerName);
+    public string RenameFile(string fileName, IFormFile fileInfo)
+    {
+      var extensionIndex = fileName.LastIndexOf('.');
+      var id = fileInfo.Name;
+      var noExtension = fileName.Substring(0, extensionIndex);
+      var onlyExtension = fileName.Substring(extensionIndex);
+      return $"{noExtension}{id}{onlyExtension}";
     }
-    public async Task UploadFiles(int thisEventid, string fileName, IFormFile fileInfo)
+    
+    public async Task<string> UploadFile(int thisEventid, string fileName, IFormFile fileInfo)
     {
       var containerClient = await this.GetContainerClient(thisEventid);
-      BlobClient blobClient = containerClient.GetBlobClient(fileName);
+      await containerClient.CreateIfNotExistsAsync(PublicAccessType.None);
 
-      var readStream = fileInfo.OpenReadStream(); 
+      var blobs = containerClient.GetBlobsAsync();
+      var blobNames = new List<string>();
+      await foreach (var blob in blobs) blobNames.Add(blob.Name);
+      var newName = blobNames.Contains(fileName) ? RenameFile(fileName, fileInfo) : fileName;
+      
+      BlobClient blobClient = containerClient.GetBlobClient(newName);
+      using var readStream = fileInfo.OpenReadStream(); 
       await blobClient.UploadAsync(readStream);
-      readStream.Close();
+
+      return newName;
     }
     public async Task<BlobDownloadInfo> DownloadFile(int thisEventId, string fileName)
     {
@@ -60,24 +71,12 @@ namespace Web.Services
     // ignore this; it's just for the test app
     public async Task<List<BlobItem>> GetBlobList(int id)
     {
-      var allBlobContainers = this.blobServiceClient.GetBlobContainersAsync();
-      var allContainers = new List<string>();
-      await foreach (var container in allBlobContainers)
-      {
-        allContainers.Add(container.Name);
-      }
-      var containerClientExists = allContainers.Contains($"event{id}");
-      var blobList = new List<BlobItem>();
-      if (containerClientExists)
-      {
-        var containerClient = await this.GetContainerClient(id);
-        var blobs = containerClient.GetBlobsAsync();
-        await foreach (var blob in blobs)
-        {
-          blobList.Add(blob);
-        }
-      }
-      return blobList;
+      var containerClient = await this.GetContainerClient(id);
+      var blobs = containerClient.GetBlobsAsync();
+      var allBlobs = new List<BlobItem>();
+      await foreach (var blob in blobs) allBlobs.Add(blob);
+
+      return allBlobs;
     }
 
   }
