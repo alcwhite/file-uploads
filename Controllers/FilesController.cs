@@ -26,7 +26,6 @@ namespace EventsManagement.Controllers
         EventFile thisFile = new EventFile();
         thisFile.Type = file.ContentType;
         thisFile.Size = file.Length;
-        Console.WriteLine(file.Name);
         thisFile.Id = int.Parse(file.Name);
         var newName = await blob.UploadFile(eventId, file.FileName, file);
         thisFile.Name = newName;
