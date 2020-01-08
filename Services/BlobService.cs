@@ -71,11 +71,16 @@ namespace Web.Services
     // ignore this; it's just for the test app
     public async Task<List<BlobItem>> GetBlobList(int id)
     {
-      var containerClient = await this.GetContainerClient(id);
-      var blobs = containerClient.GetBlobsAsync();
+      var containerNames = new List<string>();
+      var containers = blobServiceClient.GetBlobContainersAsync();
+      await foreach (var container in containers) containerNames.Add(container.Name);
       var allBlobs = new List<BlobItem>();
-      await foreach (var blob in blobs) allBlobs.Add(blob);
-
+      if (containerNames.Contains($"event{id}"))
+      {
+        var containerClient = await this.GetContainerClient(id);
+        var blobs = containerClient.GetBlobsAsync();
+        await foreach (var blob in blobs) allBlobs.Add(blob);
+      }
       return allBlobs;
     }
 

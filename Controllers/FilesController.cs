@@ -56,13 +56,16 @@ namespace EventsManagement.Controllers
     {
       var fileList = new List<EventFile>();
       var blobList = await blob.GetBlobList(eventId);
+      var count = 0;
       foreach (var blob in blobList)
       {
         EventFile thisBlob = new EventFile();
         thisBlob.Name = blob.Name;
+        thisBlob.Id = count;
         thisBlob.Size = (long)blob.Properties.ContentLength;
         thisBlob.Type = blob.Properties.ContentType;
         fileList.Add(thisBlob);
+        count++;
       }
       return fileList;
     }

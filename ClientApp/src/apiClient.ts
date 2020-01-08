@@ -2,8 +2,8 @@
 export async function uploadFiles(files: File[], event: any) {
   const data = new FormData();
   files.forEach((file, i) => {
-    const id = event.files.length > 0 ? event.files[event.files.length - 1].id : i;
-    data.append('id', file);
+    const id = event.files.length > 0 ? event.files[event.files.length - 1].id + 1 : i;
+    data.append(`${id}`, file);
   });
   const response = await fetch(`/api/files/upload?eventId=${event.id}`, {
     method: 'POST',
